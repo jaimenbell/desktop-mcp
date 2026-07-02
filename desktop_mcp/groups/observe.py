@@ -7,7 +7,6 @@ monkeypatch `desktop_mcp.groups.observe.mss` / `.pygetwindow` directly.
 """
 from __future__ import annotations
 
-import time
 import uuid
 from typing import Any
 
@@ -138,7 +137,3 @@ def window_info(title_substr: str) -> dict:
         return {"ok": True, "window": _window_to_dict(win)}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": {"type": "enum_error", "message": str(exc)}}
-
-
-def _now() -> float:
-    return time.time()

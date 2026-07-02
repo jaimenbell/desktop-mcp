@@ -42,6 +42,29 @@ class TestPidAlive:
         assert record._pid_alive(999_999_999) is False
 
 
+class TestResolveMonitorRegion:
+    def test_success(self):
+        fake_sct = MagicMock()
+        fake_sct.monitors = [
+            {"left": 0, "top": 0, "width": 3840, "height": 1080},
+            {"left": 0, "top": 0, "width": 1920, "height": 1080},
+        ]
+        fake_sct.__enter__.return_value = fake_sct
+        fake_sct.__exit__.return_value = False
+        with patch.object(record.mss, "MSS", return_value=fake_sct):
+            region = record._resolve_monitor_region(1)
+        assert region == {"left": 0, "top": 0, "width": 1920, "height": 1080}
+
+    def test_out_of_range_raises(self):
+        fake_sct = MagicMock()
+        fake_sct.monitors = [{"left": 0, "top": 0, "width": 3840, "height": 1080}]
+        fake_sct.__enter__.return_value = fake_sct
+        fake_sct.__exit__.return_value = False
+        with patch.object(record.mss, "MSS", return_value=fake_sct):
+            with pytest.raises(ValueError):
+                record._resolve_monitor_region(5)
+
+
 class TestBuildCmd:
     def test_full_desktop(self, tmp_scratch):
         cmd = record._build_cmd(tmp_scratch / "out.mp4", None, 30, 60)
@@ -74,6 +97,39 @@ class TestRecordStart:
             result = record.record_start()
         assert result["ok"] is False
         assert result["error"]["type"] == "record_start_failed"
+
+    def test_monitor_resolves_to_region(self, enable_record, tmp_scratch):
+        """monitor= is not silently ignored -- it resolves to a region and
+        gets forwarded into the ffmpeg gdigrab offset/video_size args."""
+        fake_proc = MagicMock(pid=777)
+        fake_region = {"left": 1920, "top": 0, "width": 1920, "height": 1080}
+        with patch.object(record, "_orphan_guard"), patch.object(
+            record, "_resolve_monitor_region", return_value=fake_region
+        ) as mock_resolve, patch.object(record.subprocess, "Popen", return_value=fake_proc) as mock_popen:
+            result = record.record_start(monitor=2)
+        mock_resolve.assert_called_once_with(2)
+        assert result["ok"] is True
+        cmd = mock_popen.call_args[0][0]
+        assert "-offset_x" in cmd
+        assert "1920" in cmd
+
+    def test_explicit_region_takes_priority_over_monitor(self, enable_record, tmp_scratch):
+        fake_proc = MagicMock(pid=778)
+        region = {"left": 5, "top": 5, "width": 100, "height": 100}
+        with patch.object(record, "_orphan_guard"), patch.object(record, "_resolve_monitor_region") as mock_resolve, patch.object(
+            record.subprocess, "Popen", return_value=fake_proc
+        ):
+            result = record.record_start(region=region, monitor=1)
+        mock_resolve.assert_not_called()
+        assert result["ok"] is True
+
+    def test_invalid_monitor_returns_structured_error(self, enable_record, tmp_scratch):
+        with patch.object(record, "_orphan_guard"), patch.object(
+            record, "_resolve_monitor_region", side_effect=ValueError("monitor index 9 out of range (0..2)")
+        ):
+            result = record.record_start(monitor=9)
+        assert result["ok"] is False
+        assert result["error"]["type"] == "invalid_monitor"
 
     def test_orphan_guard_kills_stale_recorder(self, enable_record, tmp_scratch):
         record._write_meta({"pid": 111, "path": "old.mp4", "started_at": time.time()})

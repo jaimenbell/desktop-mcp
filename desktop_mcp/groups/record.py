@@ -19,6 +19,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+import mss
+
 from .. import config, paths
 
 STILL_ACTIVE = 259
@@ -86,6 +88,18 @@ def _orphan_guard() -> None:
     _STATE["popen"] = None
 
 
+def _resolve_monitor_region(monitor: int) -> dict:
+    """Resolve a monitor index (0 = full virtual desktop, 1..N = physical
+    monitor N) to a gdigrab-compatible region dict, same convention as
+    observe._resolve_monitor. Raises ValueError if out of range."""
+    with mss.MSS() as sct:
+        monitors = sct.monitors
+        if monitor < 0 or monitor >= len(monitors):
+            raise ValueError(f"monitor index {monitor} out of range (0..{len(monitors) - 1})")
+        m = monitors[monitor]
+        return {"left": m["left"], "top": m["top"], "width": m["width"], "height": m["height"]}
+
+
 def _build_cmd(out_path: Path, region: dict | None, fps: int, max_duration_s: int) -> list[str]:
     cmd = ["ffmpeg", "-y", "-f", "gdigrab", "-framerate", str(fps)]
     if region:
@@ -98,6 +112,12 @@ def _build_cmd(out_path: Path, region: dict | None, fps: int, max_duration_s: in
 @config.gated(config.GROUP_RECORD)
 def record_start(region: dict | None = None, monitor: int | None = None, fps: int = 30, max_duration_s: int = 300) -> dict:
     _orphan_guard()
+
+    if region is None and monitor is not None:
+        try:
+            region = _resolve_monitor_region(monitor)
+        except (ValueError, Exception) as exc:  # noqa: BLE001 - mss/OS failure or bad index
+            return {"ok": False, "error": {"type": "invalid_monitor", "message": str(exc)}}
 
     out_path = paths.scratch_dir() / f"recording-{int(time.time())}.mp4"
     cmd = _build_cmd(out_path, region, fps, max_duration_s)
