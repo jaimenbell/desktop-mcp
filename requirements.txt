@@ -1,0 +1,6 @@
+fastmcp==3.4.2
+mss==10.2.0
+pyautogui==0.9.54
+PyGetWindow==0.0.9
+pywin32==312
+pytest==9.0.3
