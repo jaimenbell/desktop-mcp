@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.egg-info/
+scratchpad/
+*.png
+*.mp4
+*.pid
+*.meta.json
+.claude.json.bak-*
