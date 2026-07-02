@@ -61,7 +61,7 @@ def screenshot(
     Returns {ok, path, w, h, monitor} or a structured error.
     """
     try:
-        with mss.mss() as sct:
+        with mss.MSS() as sct:
             if window_title:
                 win = _find_window(window_title)
                 if win is None:
