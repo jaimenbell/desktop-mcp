@@ -1,9 +1,10 @@
 # desktop-mcp
 
 Windows desktop-control MCP server: screenshot, window management, mouse/keyboard
-input, and ffmpeg screen-recording -- built to the [rag-mcp](https://github.com)/
-mcp-factory standard (own pyproject, fastmcp server, honest README, real test
-suite). Config-gated tool groups, **input disabled by default**.
+input, and ffmpeg screen-recording -- built to the same standard as
+[mcp-factory](https://github.com/jaimenbell/mcp-factory) and rag-mcp (own
+pyproject, fastmcp server, honest README, real test suite). Config-gated tool
+groups, **input disabled by default**.
 
 ## Tool groups
 
