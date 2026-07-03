@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "desktop-mcp"
-version = "0.1.0"
+version = "0.1.1"
 readme = "README.md"
 description = "Windows desktop-control MCP server: screenshot, window mgmt, mouse/keyboard input, and screen-recording. Config-gated tool groups (observe/window/input/record) -- input disabled by default. Local-only, single-machine."
 requires-python = ">=3.12"
@@ -18,6 +18,9 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest==9.0.3"]
+
+[project.scripts]
+desktop-mcp = "desktop_mcp.__main__:main"
 
 [tool.setuptools.packages.find]
 include = ["desktop_mcp*"]

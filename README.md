@@ -1,10 +1,36 @@
 # desktop-mcp
 
-Windows desktop-control MCP server: screenshot, window management, mouse/keyboard
-input, and ffmpeg screen-recording -- built to the same standard as
-[mcp-factory](https://github.com/jaimenbell/mcp-factory) and rag-mcp (own
-pyproject, fastmcp server, honest README, real test suite). Config-gated tool
-groups, **input disabled by default**.
+[![PyPI](https://img.shields.io/pypi/v/desktop-mcp)](https://pypi.org/project/desktop-mcp/)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.jaimenbell%2Fdesktop--mcp-blue)](https://registry.modelcontextprotocol.io)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![tests](https://img.shields.io/badge/tests-123%20passing-brightgreen)](tests)
+
+Windows desktop-control MCP server: screenshot, window management,
+mouse/keyboard input, and ffmpeg screen-recording, config-gated by tool
+group (**input off by default**) -- built to the same standard as
+[mcp-factory](https://github.com/jaimenbell/mcp-factory) and rag-mcp: own
+pyproject, fastmcp server, honest README, real test suite.
+
+## Quickstart
+
+```bash
+pip install desktop-mcp
+```
+
+```jsonc
+// ~/.claude.json (or any MCP-host stdio client config)
+{
+  "mcpServers": {
+    "desktop-mcp": {
+      "command": "desktop-mcp"
+      // or: "command": "python", "args": ["-m", "desktop_mcp"]
+    }
+  }
+}
+```
+
+`window`/`input`/`record` tool groups are env-gated -- `input` stays off
+unless you explicitly opt in. See Env vars below for the full table.
 
 ## Tool groups
 
