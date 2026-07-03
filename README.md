@@ -137,3 +137,6 @@ pip install -r requirements.txt   # or: pip install .
 
 Registered in `~/.claude.json` as `desktop-mcp` (stdio, system Python312,
 `observe`+`window`+`record` groups enabled, `input` group absent from env).
+
+<!-- MCP registry ownership marker -->
+mcp-name: io.github.jaimenbell/desktop-mcp
