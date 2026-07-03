@@ -1,0 +1,10 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.jaimenbell/desktop-mcp",
+  "description": "Windows desktop-control MCP server: screenshot, window mgmt, mouse/keyboard input, recording.",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/jaimenbell/desktop-mcp",
+    "source": "github"
+  }
+}
