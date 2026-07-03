@@ -14,6 +14,7 @@ import mss
 import pygetwindow
 
 from .. import paths
+from .window import _find_window
 
 
 def _virtual_desktop_bounds(sct: Any) -> dict:
@@ -42,11 +43,6 @@ def _window_to_dict(win: Any) -> dict:
         "is_active": bool(getattr(win, "isActive", False)),
         "is_minimized": bool(getattr(win, "isMinimized", False)),
     }
-
-
-def _find_window(title_substr: str) -> Any | None:
-    matches = pygetwindow.getWindowsWithTitle(title_substr)
-    return matches[0] if matches else None
 
 
 def screenshot(

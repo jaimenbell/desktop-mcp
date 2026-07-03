@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from desktop_mcp.groups import observe
+from desktop_mcp.groups import observe, window
 
 
 def _make_fake_sct(monitors):
@@ -65,7 +65,7 @@ class TestScreenshot:
     def test_window_title_found(self, tmp_scratch):
         sct, _ = _make_fake_sct([{"left": 0, "top": 0, "width": 1920, "height": 1080}])
         fake_win = MagicMock(left=5, top=5, width=300, height=200)
-        with patch.object(observe, "mss") as mock_mss, patch.object(observe, "pygetwindow") as mock_pgw:
+        with patch.object(observe, "mss") as mock_mss, patch.object(window, "pygetwindow") as mock_pgw:
             mock_mss.MSS.return_value = sct
             mock_mss.tools.to_png = MagicMock()
             mock_pgw.getWindowsWithTitle.return_value = [fake_win]
@@ -74,7 +74,7 @@ class TestScreenshot:
         sct.grab.assert_called_once_with({"left": 5, "top": 5, "width": 300, "height": 200})
 
     def test_window_title_not_found(self, tmp_scratch):
-        with patch.object(observe, "pygetwindow") as mock_pgw:
+        with patch.object(window, "pygetwindow") as mock_pgw:
             mock_pgw.getWindowsWithTitle.return_value = []
             result = observe.screenshot(window_title="NoSuchWindow")
         assert result["ok"] is False
@@ -135,14 +135,14 @@ class TestGetActiveWindow:
 class TestWindowInfo:
     def test_found(self):
         w = MagicMock(title="Terminal", left=0, top=0, width=10, height=10, isActive=False, isMinimized=False)
-        with patch.object(observe, "pygetwindow") as mock_pgw:
+        with patch.object(window, "pygetwindow") as mock_pgw:
             mock_pgw.getWindowsWithTitle.return_value = [w]
             result = observe.window_info("Term")
         assert result["ok"] is True
         assert result["window"]["title"] == "Terminal"
 
     def test_not_found(self):
-        with patch.object(observe, "pygetwindow") as mock_pgw:
+        with patch.object(window, "pygetwindow") as mock_pgw:
             mock_pgw.getWindowsWithTitle.return_value = []
             result = observe.window_info("NoMatch")
         assert result["ok"] is False

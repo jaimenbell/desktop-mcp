@@ -10,6 +10,7 @@ inconvenient, human kill-switch. See plan's Open questions.
 from __future__ import annotations
 
 import ctypes
+import functools
 
 import pyautogui
 
@@ -46,80 +47,83 @@ def _validate_point(x: int, y: int) -> dict | None:
     return None
 
 
+def _catch_input_errors(fn):
+    """Shared exception boundary for pyautogui calls: converts any exception
+    raised during the actual input action into the same structured
+    {"ok": False, "error": {"type": "input_failed", ...}} shape every tool
+    below previously duplicated in its own try/except. Validation errors
+    (out_of_bounds) are returned before this runs, so they're unaffected."""
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": {"type": "input_failed", "message": str(exc)}}
+
+    return wrapper
+
+
 @config.gated(config.GROUP_INPUT, rate_limited_group=True)
+@_catch_input_errors
 def mouse_move(x: int, y: int, duration: float = 0.0) -> dict:
     err = _validate_point(x, y)
     if err:
         return err
-    try:
-        pyautogui.moveTo(x, y, duration=duration)
-        return {"ok": True, "x": x, "y": y}
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": {"type": "input_failed", "message": str(exc)}}
+    pyautogui.moveTo(x, y, duration=duration)
+    return {"ok": True, "x": x, "y": y}
 
 
 @config.gated(config.GROUP_INPUT, rate_limited_group=True)
+@_catch_input_errors
 def mouse_click(x: int | None = None, y: int | None = None, button: str = "left", clicks: int = 1) -> dict:
     if x is not None and y is not None:
         err = _validate_point(x, y)
         if err:
             return err
-    try:
-        pyautogui.click(x=x, y=y, button=button, clicks=clicks)
-        return {"ok": True, "x": x, "y": y, "button": button, "clicks": clicks}
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": {"type": "input_failed", "message": str(exc)}}
+    pyautogui.click(x=x, y=y, button=button, clicks=clicks)
+    return {"ok": True, "x": x, "y": y, "button": button, "clicks": clicks}
 
 
 @config.gated(config.GROUP_INPUT, rate_limited_group=True)
+@_catch_input_errors
 def mouse_drag(x1: int, y1: int, x2: int, y2: int, button: str = "left", duration: float = 0.2) -> dict:
     for x, y in ((x1, y1), (x2, y2)):
         err = _validate_point(x, y)
         if err:
             return err
-    try:
-        pyautogui.moveTo(x1, y1)
-        pyautogui.dragTo(x2, y2, duration=duration, button=button)
-        return {"ok": True, "from": [x1, y1], "to": [x2, y2], "button": button}
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": {"type": "input_failed", "message": str(exc)}}
+    pyautogui.moveTo(x1, y1)
+    pyautogui.dragTo(x2, y2, duration=duration, button=button)
+    return {"ok": True, "from": [x1, y1], "to": [x2, y2], "button": button}
 
 
 @config.gated(config.GROUP_INPUT, rate_limited_group=True)
+@_catch_input_errors
 def mouse_scroll(clicks: int, x: int | None = None, y: int | None = None) -> dict:
     if x is not None and y is not None:
         err = _validate_point(x, y)
         if err:
             return err
-    try:
-        pyautogui.scroll(clicks, x=x, y=y)
-        return {"ok": True, "clicks": clicks, "x": x, "y": y}
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": {"type": "input_failed", "message": str(exc)}}
+    pyautogui.scroll(clicks, x=x, y=y)
+    return {"ok": True, "clicks": clicks, "x": x, "y": y}
 
 
 @config.gated(config.GROUP_INPUT, rate_limited_group=True)
+@_catch_input_errors
 def key_press(key: str) -> dict:
-    try:
-        pyautogui.press(key)
-        return {"ok": True, "key": key}
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": {"type": "input_failed", "message": str(exc)}}
+    pyautogui.press(key)
+    return {"ok": True, "key": key}
 
 
 @config.gated(config.GROUP_INPUT, rate_limited_group=True)
+@_catch_input_errors
 def hotkey(keys: list[str]) -> dict:
-    try:
-        pyautogui.hotkey(*keys)
-        return {"ok": True, "keys": keys}
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": {"type": "input_failed", "message": str(exc)}}
+    pyautogui.hotkey(*keys)
+    return {"ok": True, "keys": keys}
 
 
 @config.gated(config.GROUP_INPUT, rate_limited_group=True)
+@_catch_input_errors
 def type_text(text: str, interval: float = 0.0) -> dict:
-    try:
-        pyautogui.typewrite(text, interval=interval)
-        return {"ok": True, "length": len(text)}
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": {"type": "input_failed", "message": str(exc)}}
+    pyautogui.typewrite(text, interval=interval)
+    return {"ok": True, "length": len(text)}
