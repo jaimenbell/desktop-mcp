@@ -3,7 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/desktop-mcp)](https://pypi.org/project/desktop-mcp/)
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.jaimenbell%2Fdesktop--mcp-blue)](https://registry.modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-123%20passing-brightgreen)](tests)
+[![tests](https://img.shields.io/badge/tests-123%20%28121%20passing%2C%202%20skipped%29-brightgreen)](tests)
 
 Windows desktop-control MCP server: screenshot, window management,
 mouse/keyboard input, and ffmpeg screen-recording, config-gated by tool
