@@ -73,13 +73,27 @@ implementation + test.
 
 ## Limitations (read before relying on this)
 
-- **UIPI (User Interface Privilege Isolation).** A medium-integrity process
-  (this server, unless you elevate it) cannot send input to or manipulate
-  windows owned by a higher-integrity (elevated/admin) process. Window and
-  input tools surface this as a structured `window_action_failed` /
-  `input_failed` error naming UIPI, never a silent no-op -- but there is no
-  workaround short of running the server elevated, which this project does
-  not do or recommend.
+- **UIPI (User Interface Privilege Isolation) -- protects window handles,
+  not input.** A medium-integrity process (this server, unless you elevate
+  it) cannot manipulate a *window* owned by a higher-integrity
+  (elevated/admin) process: `focus_window`, `move_resize_window`,
+  `minimize_window`, and `restore_window` go through `pygetwindow`'s
+  window-handle APIs (`desktop_mcp/groups/window.py`), which Windows blocks
+  under UIPI and which this server surfaces as a structured
+  `window_action_failed` error naming UIPI, never a silent no-op.
+  **Keyboard/mouse input tools are not covered by this protection.**
+  `type_text`, `hotkey`, `key_press`, and the mouse actions
+  (`desktop_mcp/groups/input_tools.py`) go through `pyautogui`, which injects
+  synthetic input at the hardware/driver level (`SendInput`) rather than
+  targeting a window handle -- UIPI does not intercept this path. If an
+  elevated window already has focus (e.g. a UAC-elevated app the user
+  brought to the foreground themselves), these tools can still send it
+  keystrokes and clicks. There is no code-level bypass here -- it's a real
+  gap in what UIPI protects, and operators should treat any elevated app
+  that could plausibly have focus as reachable by this server's input
+  tools, not as isolated by Windows. No workaround short of running the
+  server elevated (or not enabling the input group at all), which this
+  project does not do or recommend.
 - **DPI scaling.** The server sets per-monitor-v2 DPI awareness at startup so
   `mss` pixel coordinates and `pyautogui` point coordinates should agree on
   scaled displays. This bootstrap is unit-tested for idempotency/no-crash
