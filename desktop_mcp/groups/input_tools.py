@@ -33,14 +33,33 @@ def _virtual_desktop_bounds() -> dict:
     return {"left": left, "top": top, "width": width, "height": height}
 
 
-def _validate_point(x: int, y: int) -> dict | None:
+def _validate_point(x: int | None, y: int | None) -> dict | None:
+    """Bounds-check whichever of x/y is provided, independently.
+
+    Both None is a legitimate "act at current cursor position" mode
+    (pyautogui._normalizeXYArgs falls back to the live cursor position for
+    a missing coordinate) and intentionally skips validation. A single
+    coordinate is still validated against its own axis so e.g.
+    x=99999, y=None can't slip past the bounds check.
+    """
+    if x is None and y is None:
+        return None
     b = _virtual_desktop_bounds()
-    if not (b["left"] <= x <= b["left"] + b["width"] and b["top"] <= y <= b["top"] + b["height"]):
+    if x is not None and not (b["left"] <= x <= b["left"] + b["width"]):
         return {
             "ok": False,
             "error": {
                 "type": "out_of_bounds",
-                "message": f"Point ({x}, {y}) is outside the virtual desktop bounds {b}.",
+                "message": f"X coordinate {x} is outside the virtual desktop bounds {b}.",
+                "bounds": b,
+            },
+        }
+    if y is not None and not (b["top"] <= y <= b["top"] + b["height"]):
+        return {
+            "ok": False,
+            "error": {
+                "type": "out_of_bounds",
+                "message": f"Y coordinate {y} is outside the virtual desktop bounds {b}.",
                 "bounds": b,
             },
         }
@@ -77,10 +96,9 @@ def mouse_move(x: int, y: int, duration: float = 0.0) -> dict:
 @config.gated(config.GROUP_INPUT, rate_limited_group=True)
 @_catch_input_errors
 def mouse_click(x: int | None = None, y: int | None = None, button: str = "left", clicks: int = 1) -> dict:
-    if x is not None and y is not None:
-        err = _validate_point(x, y)
-        if err:
-            return err
+    err = _validate_point(x, y)
+    if err:
+        return err
     pyautogui.click(x=x, y=y, button=button, clicks=clicks)
     return {"ok": True, "x": x, "y": y, "button": button, "clicks": clicks}
 
@@ -100,10 +118,9 @@ def mouse_drag(x1: int, y1: int, x2: int, y2: int, button: str = "left", duratio
 @config.gated(config.GROUP_INPUT, rate_limited_group=True)
 @_catch_input_errors
 def mouse_scroll(clicks: int, x: int | None = None, y: int | None = None) -> dict:
-    if x is not None and y is not None:
-        err = _validate_point(x, y)
-        if err:
-            return err
+    err = _validate_point(x, y)
+    if err:
+        return err
     pyautogui.scroll(clicks, x=x, y=y)
     return {"ok": True, "clicks": clicks, "x": x, "y": y}
 

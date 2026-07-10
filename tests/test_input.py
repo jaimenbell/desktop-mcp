@@ -74,6 +74,38 @@ class TestMouseClick:
         assert result["ok"] is False
         assert result["error"]["type"] == "out_of_bounds"
 
+    def test_out_of_bounds_x_only(self, enable_input):
+        """x given without y still gets bounds-checked (was skipped pre-fix)."""
+        with patch.object(input_tools, "pyautogui") as mock_pag:
+            result = input_tools.mouse_click(x=99999, y=None)
+        assert result["ok"] is False
+        assert result["error"]["type"] == "out_of_bounds"
+        mock_pag.click.assert_not_called()
+
+    def test_out_of_bounds_y_only(self, enable_input):
+        """y given without x still gets bounds-checked (was skipped pre-fix)."""
+        with patch.object(input_tools, "pyautogui") as mock_pag:
+            result = input_tools.mouse_click(x=None, y=99999)
+        assert result["ok"] is False
+        assert result["error"]["type"] == "out_of_bounds"
+        mock_pag.click.assert_not_called()
+
+    def test_success_x_only_in_bounds(self, enable_input):
+        """A single valid coordinate is accepted and passed through untouched."""
+        with patch.object(input_tools, "pyautogui") as mock_pag:
+            result = input_tools.mouse_click(x=10, y=None)
+        assert result["ok"] is True
+        mock_pag.click.assert_called_once_with(x=10, y=None, button="left", clicks=1)
+
+    def test_success_both_none_is_current_position_mode(self, enable_input):
+        """Both x and y None is the documented 'click at current cursor
+        position' mode (pyautogui._normalizeXYArgs falls back to
+        position()) and intentionally skips bounds validation."""
+        with patch.object(input_tools, "pyautogui") as mock_pag:
+            result = input_tools.mouse_click(x=None, y=None)
+        assert result["ok"] is True
+        mock_pag.click.assert_called_once_with(x=None, y=None, button="left", clicks=1)
+
 
 class TestMouseDrag:
     def test_success(self, enable_input):
@@ -100,6 +132,30 @@ class TestMouseScroll:
         with patch.object(input_tools, "pyautogui"):
             result = input_tools.mouse_scroll(1, x=-1, y=-1)
         assert result["ok"] is False
+
+    def test_out_of_bounds_x_only(self, enable_input):
+        """x given without y still gets bounds-checked (was skipped pre-fix)."""
+        with patch.object(input_tools, "pyautogui") as mock_pag:
+            result = input_tools.mouse_scroll(1, x=99999, y=None)
+        assert result["ok"] is False
+        assert result["error"]["type"] == "out_of_bounds"
+        mock_pag.scroll.assert_not_called()
+
+    def test_out_of_bounds_y_only(self, enable_input):
+        """y given without x still gets bounds-checked (was skipped pre-fix)."""
+        with patch.object(input_tools, "pyautogui") as mock_pag:
+            result = input_tools.mouse_scroll(1, x=None, y=99999)
+        assert result["ok"] is False
+        assert result["error"]["type"] == "out_of_bounds"
+        mock_pag.scroll.assert_not_called()
+
+    def test_success_both_none_is_current_position_mode(self, enable_input):
+        """Both x and y None scrolls at the current cursor position and
+        intentionally skips bounds validation."""
+        with patch.object(input_tools, "pyautogui") as mock_pag:
+            result = input_tools.mouse_scroll(5, x=None, y=None)
+        assert result["ok"] is True
+        mock_pag.scroll.assert_called_once_with(5, x=None, y=None)
 
 
 class TestKeyPress:
