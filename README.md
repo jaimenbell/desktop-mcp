@@ -81,19 +81,32 @@ implementation + test.
   window-handle APIs (`desktop_mcp/groups/window.py`), which Windows blocks
   under UIPI and which this server surfaces as a structured
   `window_action_failed` error naming UIPI, never a silent no-op.
-  **Keyboard/mouse input tools are not covered by this protection.**
-  `type_text`, `hotkey`, `key_press`, and the mouse actions
-  (`desktop_mcp/groups/input_tools.py`) go through `pyautogui`, which injects
-  synthetic input at the hardware/driver level (`SendInput`) rather than
-  targeting a window handle -- UIPI does not intercept this path. If an
-  elevated window already has focus (e.g. a UAC-elevated app the user
-  brought to the foreground themselves), these tools can still send it
-  keystrokes and clicks. There is no code-level bypass here -- it's a real
-  gap in what UIPI protects, and operators should treat any elevated app
-  that could plausibly have focus as reachable by this server's input
-  tools, not as isolated by Windows. No workaround short of running the
-  server elevated (or not enabling the input group at all), which this
-  project does not do or recommend.
+  **Keyboard/mouse input tools ARE covered by UIPI too -- and worse, they
+  fail silently.** `type_text`, `hotkey`, `key_press`, and the mouse actions
+  (`desktop_mcp/groups/input_tools.py`) go through `pyautogui`, whose Windows
+  backend actually calls the legacy `keybd_event`/`mouse_event` Win32
+  functions (not `SendInput` -- `pyautogui` tried `SendInput` and reverted to
+  the older calls; see `_pyautogui_win.py` in the installed package). Per
+  Microsoft's own docs, UIPI applies to synthesized input generally:
+  "[applications] are permitted to inject input only into applications that
+  are at an equal or lesser integrity level" (MSDN `SendInput` reference),
+  and critically, "neither `GetLastError` nor the return value will indicate
+  the failure was caused by UIPI blocking." `keybd_event`/`mouse_event` are
+  void-return legacy calls with no failure signal at all, so `pyautogui` (and
+  this server) cannot detect a block even in principle: if an elevated
+  window has focus, these tools report `{"ok": true}` while Windows silently
+  discards the injected keystrokes/clicks -- no exception, no error field,
+  nothing reaches the target. This is **worse** than the window-handle path
+  above, which at least raises a structured `window_action_failed` error
+  naming UIPI. There is no code-level bypass and no workaround short of
+  running the server elevated (or not enabling the input group at all),
+  which this project does not do or recommend. Operators should treat any
+  elevated app that could plausibly have focus as **silently unreachable**
+  by this server's input tools, not as a gap that lets them through.
+  *Possible future enhancement (not implemented): detect the foreground
+  window's integrity level before injecting and return a structured refusal
+  instead of a false `{"ok": true}` -- tracked as a v2 idea, not a current
+  capability.*
 - **DPI scaling.** The server sets per-monitor-v2 DPI awareness at startup so
   `mss` pixel coordinates and `pyautogui` point coordinates should agree on
   scaled displays. This bootstrap is unit-tested for idempotency/no-crash
