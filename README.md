@@ -52,6 +52,37 @@ own env explicitly enables them, so a misconfigured or overly-permissive
 harness can't turn on capabilities the operator didn't opt into for this
 process.
 
+## Security
+
+Read this before you register desktop-mcp. This is a desktop-control server;
+what it can do to your machine is spelled out here plainly so you can make an
+informed decision. Honesty about the blast radius is the point.
+
+- **The `observe` group (`screenshot`, window enumeration) is ALWAYS ON and
+  cannot be disabled.** Any caller that can reach this server can capture the
+  contents of *any* visible window on the machine -- including a password
+  manager, an authenticator/2FA app, a seed phrase, a banking tab, or a
+  private message. `screenshot` returns a **file path to a PNG written to the
+  scratch dir** (default `%TEMP%\desktop-mcp-scratch`), not inline pixels, so
+  captured screen contents also persist on disk until that directory is
+  cleared. Treat the scratch dir as sensitive and run this server only on a
+  machine and under a harness you trust.
+- **`DESKTOP_MCP_ENABLE_INPUT=1` grants keystroke and mouse injection into the
+  focused window -- this is RCE-equivalent.** With the `input` group enabled,
+  a caller can type commands, press hotkeys, and drive the mouse in whatever
+  window currently has focus (a terminal, a browser, an admin tool). It is
+  **OFF by default** for exactly this reason; turn it on only when you
+  understand that you are handing the caller the keyboard. When disabled every
+  input tool returns a structured `policy_refusal` (never a silent action).
+- **Least privilege:** leave `input`, `window`, and `record` groups off unless
+  a specific task needs them, keep this server on a trusted host, and do not
+  run it elevated (admin) unless you have accepted that an elevated input group
+  can drive elevated windows.
+
+The env-gating, default-off input group, structured refusals, and rate cap
+described above are the enforced controls; this section states, without
+softening, what remains reachable by design.
+
 ## Honest-capabilities table
 
 Every claim below maps to the file that implements it and the test(s) that
