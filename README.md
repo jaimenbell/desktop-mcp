@@ -3,7 +3,8 @@
 [![PyPI](https://img.shields.io/pypi/v/desktop-mcp)](https://pypi.org/project/desktop-mcp/)
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.jaimenbell%2Fdesktop--mcp-blue)](https://registry.modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-130%20%28128%20passing%2C%202%20skipped%29-brightgreen)](tests)
+[![tests](https://img.shields.io/badge/tests-141%20%28139%20passing%2C%202%20skipped%29-brightgreen)](tests)
+[![CI](https://github.com/jaimenbell/desktop-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/jaimenbell/desktop-mcp/actions/workflows/ci.yml)
 
 Windows desktop-control MCP server: screenshot, window management,
 mouse/keyboard input, and ffmpeg screen-recording, config-gated by tool
@@ -197,6 +198,12 @@ implementation + test.
 ```
 
 ## Testing
+
+CI (`.github/workflows/ci.yml`) runs this suite on every push/PR (on
+`windows-latest`, since `pywin32`/`PyGetWindow` are Windows-only deps that
+don't install on Linux runners) and fails the build if the Tests badge
+above drifts from what the suite actually reports -- see
+`scripts/check_readme_counts.py`.
 
 ```
 # unit suite (mocked backends, no real screen/input/recording touched)
