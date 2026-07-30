@@ -41,3 +41,29 @@ jobs:
 
       - name: README count-verification gate
         run: python scripts/check_readme_counts.py --readme README.md --junit-xml junit.xml
+
+  trivy:
+    name: Dependency vulnerability scan (warn-only)
+    # trivy-action is a Docker container action and only runs on Linux
+    # runners -- the test job above must stay on windows-latest (pywin32/
+    # PyGetWindow have no non-Windows wheels), so this is a separate job on
+    # ubuntu-latest rather than a step bolted onto that job.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+
+      # WARN-ONLY on purpose: this is the first run, so the baseline is
+      # unknown -- gating now would block every build on findings nobody
+      # has triaged yet.
+      #
+      # To gate later: drop continue-on-error, set exit-code to "1", and add
+      # a .trivyignore entry for any accepted-risk CVE with a dated rationale.
+      - name: Dependency vulnerability scan (warn-only)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        continue-on-error: true
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret
+          severity: HIGH,CRITICAL
+          exit-code: "0"
