@@ -232,7 +232,7 @@ Registered in `~/.claude.json` as `desktop-mcp` (stdio, system Python312,
 
 ## Commercial support
 
-Maintained by [Jaimen Bell](https://jaimenbell.dev). For production MCP integrations, custom servers, or agent-reliability work, see [jaimenbell.dev](https://jaimenbell.dev) or sponsor ongoing maintenance via [GitHub Sponsors](https://github.com/sponsors/jaimenbell).
+Maintained by [Jaimen Bell](https://jaimenbell.dev). For production MCP integrations, custom servers, or agent-reliability work, see [jaimenbell.dev](https://jaimenbell.dev).
 
 <!-- MCP registry ownership marker -->
 mcp-name: io.github.jaimenbell/desktop-mcp
